@@ -28,6 +28,10 @@ public class Broker implements Serializable {
         this.name = name;
     }
 
+    public String name() {
+        return name;
+    }
+
     @Override
     public boolean equals(Object obj) {
         Broker that;

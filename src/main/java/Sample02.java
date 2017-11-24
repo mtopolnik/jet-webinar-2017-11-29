@@ -45,6 +45,7 @@ public final class Sample02 {
     private static final int PRODUCT_ID_BASE = 21;
     private static final int BROKER_ID_BASE = 31;
     private static final int PRODUCT_BROKER_COUNT = 4;
+    private static final String TRADE_NEWS = "tradeNews";
 
     private final JetInstance jet;
 
@@ -71,8 +72,9 @@ public final class Sample02 {
                 brokEntries, joinMapEntries(Trade::brokerId)
         );
 
-        // Send the joined tuples to the logging sink
-        joined.drainTo(Sinks.logger());
+        // Send the joined tuples to a list sink
+        joined.map(t3 -> t3.f0().id() + ": " + t3.f2().name() + " traded " + t3.f1().name())
+              .drainTo(Sinks.list(TRADE_NEWS));
 
         return p;
     }
@@ -93,11 +95,17 @@ public final class Sample02 {
         try {
             JobConfig cfg = new JobConfig().addClass(Sample02.class);
             Job job = jet.newJob(hashJoinPipeline(), cfg);
+            System.out.println("Jet job started");
+            Thread.sleep(1000);
             eventGenerator.generateEventsForFiveSeconds();
             job.cancel();
-            Thread.sleep(2000);
+            System.out.println("These are the trade news:");
+            for (String msg : jet.<String>getList(TRADE_NEWS)) {
+                System.out.println(msg);
+            }
         } finally {
             eventGenerator.shutdown();
+            jet.<String>getList(TRADE_NEWS).clear();
             Jet.shutdownAll();
         }
     }
@@ -107,7 +115,7 @@ public final class Sample02 {
         IMap<Integer, Broker> brokerMap = jet.getMap(BROKERS);
 
         String[] prodNames = {
-                "GOOGL", "AAPL", "FACB", "FB"
+                "GOOGL", "AAPL", "AMZN", "FB"
         };
         String[] brokNames = {
                 "Henry", "William", "Ginger", "Esther"
