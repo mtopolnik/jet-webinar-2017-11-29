@@ -7,5 +7,13 @@
         <artifactId>webinar-2017-11-29</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>datamodel</artifactId>
+    <artifactId>samples</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hazelcast.jet.webinar</groupId>
+            <artifactId>datamodel</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>

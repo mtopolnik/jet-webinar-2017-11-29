@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package webinar;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.ComputeStage;
@@ -22,7 +23,7 @@ import com.hazelcast.jet.Job;
 import com.hazelcast.jet.Pipeline;
 import com.hazelcast.jet.Sinks;
 import com.hazelcast.jet.Sources;
-import com.hazelcast.jet.config.JobConfig;
+import com.hazelcast.jet.config.JetConfig;
 import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.map.journal.EventJournalMapEvent;
 import datamodel.Broker;
@@ -84,7 +85,9 @@ public final class Sample02 {
         // Lower operation timeout to speed up job cancellation
         System.setProperty("hazelcast.operation.call.timeout.millis", "1000");
 
-        JetInstance jet = Jet.newJetClient();
+        JetConfig cfg = new JetConfig();
+        cfg.getHazelcastConfig().getMapEventJournalConfig(TRADES).setEnabled(true);
+        JetInstance jet = Jet.newJetInstance(cfg);
         new Sample02(jet).go();
     }
 
@@ -93,8 +96,7 @@ public final class Sample02 {
         EventGenerator eventGenerator = new EventGenerator(jet.getMap(TRADES));
         eventGenerator.start();
         try {
-            JobConfig cfg = new JobConfig().addClass(Sample02.class);
-            Job job = jet.newJob(hashJoinPipeline(), cfg);
+            Job job = jet.newJob(hashJoinPipeline());
             System.out.println("Jet job started");
             Thread.sleep(1000);
             eventGenerator.generateEventsForFiveSeconds();
